@@ -20,8 +20,7 @@ module Mruby
     module Method
       def run argv
         @pwd       = Dir.pwd
-        @workdir   = ENV['MRUBY_BUILD_WORKDIR']
-        @workdir ||= File.expand_path(File.dirname $0)
+        @workdir   = ENV['MRUBY_BUILD_WORKDIR'] || Dir.pwd
         @opts      = opt_parse argv
         @in_threads = 3
 
