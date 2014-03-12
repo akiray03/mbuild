@@ -1,6 +1,8 @@
 require 'fileutils'
 require 'optparse'
 require 'term/ansicolor'
+require 'parallel'
+require 'ruby-progressbar'
 
 require "mruby/build/version"
 require "mruby/build/base"
@@ -21,10 +23,11 @@ module Mruby
         @workdir   = ENV['MRUBY_BUILD_WORKDIR']
         @workdir ||= File.expand_path(File.dirname $0)
         @opts      = opt_parse argv
+        @in_threads = 3
 
-        MrubyRepo.pwd     = Mrbgem.pwd     = @pwd
-        MrubyRepo.workdir = Mrbgem.workdir = @workdir
-        MrubyRepo.opts    = Mrbgem.opts    = @opts
+        Build.pwd     = MrubyRepo.pwd     = Mrbgem.pwd     = @pwd
+        Build.workdir = MrubyRepo.workdir = Mrbgem.workdir = @workdir
+        Build.opts    = MrubyRepo.opts    = Mrbgem.opts    = @opts
 
         repos   = load_mruby_list
         mrbgems = load_mgem_list
@@ -69,24 +72,24 @@ module Mruby
 
       def load_mruby_list
         base = []
-        base << MrubyRepo.new("mruby",  'git@github.com:mruby/mruby.git')
-        base << MrubyRepo.new("stable", 'git@github.com:mruby-Forum/mruby.git')
-        base << MrubyRepo.new("iij",    'git@github.com:iij/mruby.git')
+        base << MrubyRepo.new("mruby",  'https://github.com/mruby/mruby.git')
+        base << MrubyRepo.new("stable", 'https://github.com/mruby-Forum/mruby.git')
+        base << MrubyRepo.new("iij",    'https://github.com/iij/mruby.git')
         base
       end
 
       def load_mgem_list
         mrbgems = []
-        mrbgems << Mrbgem.new("mruby-digest", 'git@github.com:iij/mruby-digest.git')
-        mrbgems << Mrbgem.new("mruby-dir", 'git@github.com:iij/mruby-dir.git')
-        mrbgems << Mrbgem.new("mruby-env", 'git@github.com:iij/mruby-env.git',
+        mrbgems << Mrbgem.new("mruby-digest", 'https://github.com/iij/mruby-digest.git')
+        mrbgems << Mrbgem.new("mruby-dir", 'https://github.com/iij/mruby-dir.git')
+        mrbgems << Mrbgem.new("mruby-env", 'https://github.com/iij/mruby-env.git',
                               'iij/mruby-mtest', 'iij/mruby-regexp-pcre')
-        mrbgems << Mrbgem.new("mruby-errno", 'git@github.com:iij/mruby-errno.git')
-        mrbgems << Mrbgem.new("mruby-mdebug", 'git@github.com:iij/mruby-mdebug.git')
+        mrbgems << Mrbgem.new("mruby-errno", 'https://github.com/iij/mruby-errno.git')
+        mrbgems << Mrbgem.new("mruby-mdebug", 'https://github.com/iij/mruby-mdebug.git')
         mrbgems << Mrbgem.new2("iij/mruby-mock")
-        mrbgems << Mrbgem.new("mruby-iijson", 'git@github.com:iij/mruby-iijson.git')
-        mrbgems << Mrbgem.new("mruby-io", 'git@github.com:iij/mruby-io.git')
-        mrbgems << Mrbgem.new("mruby-ipaddr", 'git@github.com:iij/mruby-ipaddr.git',
+        mrbgems << Mrbgem.new("mruby-iijson", 'https://github.com/iij/mruby-iijson.git')
+        mrbgems << Mrbgem.new("mruby-io", 'https://github.com/iij/mruby-io.git')
+        mrbgems << Mrbgem.new("mruby-ipaddr", 'https://github.com/iij/mruby-ipaddr.git',
                               'iij/mruby-io', 'iij/mruby-pack', 'iij/mruby-socket',
                               'iij/mruby-env')
         mrbgems << Mrbgem.new2("iij/mruby-pack")
@@ -97,19 +100,19 @@ module Mruby
                                'iij/mruby-tempfile')
         mrbgems << Mrbgem.new2("iij/mruby-simple-random")
         mrbgems << Mrbgem.new2("iij/mruby-socket", 'iij/mruby-io')
-        mrbgems << Mrbgem.new("mruby-syslog", 'git@github.com:iij/mruby-syslog.git',
+        mrbgems << Mrbgem.new("mruby-syslog", 'https://github.com/iij/mruby-syslog.git',
                               'iij/mruby-io')
         mrbgems << Mrbgem.new2("iij/mruby-tempfile", 'iij/mruby-io', 'iij/mruby-env')
         mrbgems
       end
 
       def update repos, mrbgems
-        repos.each do |m|
+        Parallel.map(repos, in_threads: @in_threads) do |m|
           puts "* updating #{m.name}/mruby".yellow
           m.update
         end
 
-        mrbgems.each do |g|
+        Parallel.map(mrbgems, in_threads: @in_threads) do |g|
           puts "* updating #{g.name}".yellow
           g.update
         end
@@ -118,15 +121,24 @@ module Mruby
       def build repos, mrbgems
         puts
         puts "* Build and test".yellow
+        progressbar = ProgressBar.create(
+            title: 'Builds',
+            format: '%B(%p%%)',
+            progress_mark: ' ',
+            remainder_mark: ' ',
+            starting_at: 0,
+            total: (repos.size * mrbgems.size)
+        )
         builds = []
-        repos.each { |m|
-          mrbgems.each { |g|
+        repos.each do |m|
+          mrbgems.each do |g|
             b = Build.new m, g
             b.write_build_config
             b.build
             builds << b
-          }
-        }
+            progressbar.increment
+          end
+        end
         builds
       end
 
