@@ -21,10 +21,9 @@ module Mruby
       def update
         return if @updated
         if Dir.exists? @dir
-          Dir.chdir @dir
-          system "git pull"
+          system "cd #{@dir} && git pull"
         else
-          system "git clone #{@url} #{@dir}"
+          system "git clone -q #{@url} #{@dir}"
         end
         @updated = true
       end

@@ -20,9 +20,9 @@ module Mruby
     module Method
       def run argv
         @pwd       = Dir.pwd
-        @workdir   = ENV['MRUBY_BUILD_WORKDIR'] || Dir.pwd
+        @workdir   = File.expand_path(ENV['MRUBY_BUILD_WORKDIR'] || Dir.pwd)
         @opts      = opt_parse argv
-        @in_threads = 3
+        @parallels = (ENV['MRUBY_BUILD_PARALLEL'] || 3).to_i
 
         Build.pwd     = MrubyRepo.pwd     = Mrbgem.pwd     = @pwd
         Build.workdir = MrubyRepo.workdir = Mrbgem.workdir = @workdir
@@ -106,12 +106,12 @@ module Mruby
       end
 
       def update repos, mrbgems
-        Parallel.map(repos, in_threads: @in_threads) do |m|
+        Parallel.map(repos, in_threads: @parallels) do |m|
           puts "* updating #{m.name}/mruby".yellow
           m.update
         end
 
-        Parallel.map(mrbgems, in_threads: @in_threads) do |g|
+        Parallel.map(mrbgems, in_threads: @parallels) do |g|
           puts "* updating #{g.name}".yellow
           g.update
         end
@@ -130,14 +130,18 @@ module Mruby
         )
         builds = []
         mrbgems.each do |g|
-          Parallel.each(repos, in_threads: @in_threads) do |m|
-            b = Build.new m, g, Proc.new{ progressbar.increment }
+          builds << Parallel.map(repos, in_processes: @parallels) do |m|
+            b = Build.new m, g
             b.write_build_config
-            b.build
-            builds << b
+            b.clean
+            b.build_all
+            progressbar.increment
+            b.build_test
+            progressbar.increment
+            b
           end
         end
-        builds
+        builds.flatten.compact
       end
 
       def report results
@@ -157,7 +161,7 @@ module Mruby
         puts
         puts "Build Results:".yellow
         puts "%-7s %-20s %-8s%s" % [ "mruby", "mrbgem", "build", "test" ]
-        puts "-" * 40
+        puts "-" * 48
 
         results.sort! { |a, b|
           if a.gem.name == b.gem.name

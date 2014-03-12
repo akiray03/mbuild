@@ -35,12 +35,10 @@ module Mruby
       def update
         return if @updated
         if Dir.exists? @dir
-          Dir.chdir @dir do
-            system "git fetch --depth 1 origin"
-            system "git checkout master"
-          end
+          system "cd #{@dir} && git fetch --depth 1 origin"
+          system "cd #{@dir} && git checkout master"
         else
-          system "git clone --depth 1 #{@url} #{@dir}"
+          system "git clone -q --depth 1 #{@url} #{@dir}"
         end
         @updated = true
       end
