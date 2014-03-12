@@ -1,12 +1,14 @@
+require_relative 'base'
+
 module Mruby
   module Build
-    class Mrbgem
+    class Mrbgem < Base
       def initialize name, url, *deps
         @name = name
         @url  = url
         @deps = deps
 
-        @dir = File.join($workdir, @name)
+        @dir = File.join(workdir, @name)
         @updated = false
       end
 
@@ -18,7 +20,7 @@ module Mruby
 
       def self.local name, dir, *deps
         g = self.new name, "", *deps
-        g.set_dir File.join($pwd, dir)
+        g.set_dir File.join(pwd, dir)
         g
       end
 

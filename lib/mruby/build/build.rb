@@ -1,8 +1,10 @@
+require_relative 'base'
+
 module Mruby
   module Build
-    class Build
+    class Build < Base
       def initialize mruby, gem
-        @dir = File.join($workdir, "build", mruby.name, gem.name)
+        @dir = File.join(workdir, "build", mruby.name, gem.name)
         @mruby = mruby
         @gem = gem
 

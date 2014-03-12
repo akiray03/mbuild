@@ -1,11 +1,13 @@
+require_relative 'base'
+
 module Mruby
   module Build
-    class Mruby
+    class MrubyRepo < Base
       def initialize name, url
         @name    = name
         @url     = url
 
-        @dir = File.join($workdir, @name)
+        @dir = File.join(workdir, @name)
         @upadted = false
       end
 
@@ -13,7 +15,7 @@ module Mruby
       attr_reader :name
 
       def clean
-        system "rm -rf #{@dir}/build" unless $opts[:update]
+        system "rm -rf #{@dir}/build" unless opts[:update]
       end
 
       def update
