@@ -126,16 +126,15 @@ module Mruby
             progress_mark: ' ',
             remainder_mark: ' ',
             starting_at: 0,
-            total: (repos.size * mrbgems.size)
+            total: (repos.size * mrbgems.size * 2)
         )
         builds = []
-        repos.each do |m|
-          mrbgems.each do |g|
-            b = Build.new m, g
+        mrbgems.each do |g|
+          Parallel.each(repos, in_threads: @in_threads) do |m|
+            b = Build.new m, g, Proc.new{ progressbar.increment }
             b.write_build_config
             b.build
             builds << b
-            progressbar.increment
           end
         end
         builds

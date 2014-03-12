@@ -3,10 +3,11 @@ require_relative 'base'
 module Mruby
   module Build
     class Build < Base
-      def initialize mruby, gem
+      def initialize mruby, gem, tick = nil
         @dir = File.join(workdir, "build", mruby.name, gem.name)
         @mruby = mruby
         @gem = gem
+        @tick = tick if tick.is_a? Proc
 
         @config_path = File.join(@dir, "build_config.rb")
         @log_all = File.join(@dir, "all.txt")
@@ -32,6 +33,7 @@ module Mruby
         #$stdout.write "mruby/#{@gem.name}: rake all..."
         #$stdout.flush
         puts "#{@mruby.name}/#{@gem.name}: rake all"
+        @tick.call if @tick
         File.open(@log_all, "w") { |f|
           pid = Process.spawn(env, "rake all", { 1=>f, 2=>f })
           Process.waitpid pid
@@ -45,6 +47,7 @@ module Mruby
         #$stdout.flush
 
         puts "#{@mruby.name}/#{@gem.name}: rake test"
+        @tick.call if @tick
         if @result_all
           File.open(@log_test, "w") { |f|
             pid = Process.spawn(env, "rake test", { 1=>f, 2=>f })
