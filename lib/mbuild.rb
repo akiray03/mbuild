@@ -20,10 +20,11 @@ module Mbuild
   module Method
     def run argv
       @pwd       = Dir.pwd
-      @workdir   = File.expand_path(ENV['MRUBY_BUILD_WORKDIR'] || Dir.pwd)
+      @workdir   = File.expand_path(ENV['MBUILD_WORKDIR'] || Dir.pwd)
       @opts      = opt_parse argv
-      @parallels = (ENV['MRUBY_BUILD_PARALLEL'] || 3).to_i
-      @config = TOML.load_file('default.conf')
+      @parallels = (ENV['MBUILD_PARALLEL'] || 1).to_i
+      default_config_path = File.expand_path('../default.conf', __FILE__)
+      @config = TOML.load_file(default_config_path) if File.exist? default_config_path
 
       Build.pwd     = MrubyRepo.pwd     = Mrbgem.pwd     = @pwd
       Build.workdir = MrubyRepo.workdir = Mrbgem.workdir = @workdir
@@ -31,11 +32,11 @@ module Mbuild
 
       repos   = load_mruby_list
       mrbgems = load_mgem_list
-      if @opts[:base]
-        repos.delete_if { |m| m.name != @opts[:base] }
+      if @opts[:base].size > 0
+        repos = repos.select{|r| @opts[:base].include? r.name}
       end
-      if @opts[:gem]
-        mrbgems.delete_if { |g| g.name != @opts[:gem] }
+      if @opts[:gem].size > 0
+        mrbgems = mrbgems.select{|m| @opts[:gem].include? m.name }
       end
 
       if @opts[:argv].size > 0
@@ -45,6 +46,7 @@ module Mbuild
         mrbgems = [g]
       end
 
+      buildinfo repos, mrbgems
       update repos, mrbgems
       results = build repos, mrbgems
       report results
@@ -53,16 +55,22 @@ module Mbuild
     end
 
     def opt_parse argv
-      build_options = {}
+      build_options = {
+          all: false,
+          base: [],
+          gem: [],
+          update: false,
+          argv: []
+      }
 
       opt = OptionParser.new
       opt.on('-a', '--all', 'build all combinations.') { |v| build_options[:all] = v }
-      opt.on('-b MRUBY', '--base MRUBY') { |v| build_options[:base] = v }
-      opt.on('-g GEM', '--gem GEM') { |v| build_options[:gem] = v }
+      opt.on('-b MRUBY', '--base MRUBY') { |v| build_options[:base] << v }
+      opt.on('-g GEM', '--gem GEM') { |v| build_options[:gem] << v }
       opt.on('-u', '--update') { |v| build_options[:update] = true }
       build_options[:argv] = opt.parse! argv
 
-      unless build_options[:all] or build_options[:gem] or build_options[:argv].size > 0
+      unless build_options[:all] or build_options[:gem].size > 0 or build_options[:argv].size > 0
         puts opt.help
         raise InvalidCommandLineOptionError
       end
@@ -104,6 +112,20 @@ module Mbuild
                             'iij/mruby-io')
       mrbgems << Mrbgem.new2("iij/mruby-tempfile", 'iij/mruby-io', 'iij/mruby-env')
       mrbgems
+    end
+
+    def buildinfo repos, mrbgems
+      puts "* Build Information (mruby)".yellow
+      repos.each do |r|
+        puts "#{r.name.ljust(20)}#{r.url}"
+      end
+      puts
+
+      puts "* Build Information (mrbgem)".yellow
+      mrbgems.each do |m|
+        puts "#{m.name.ljust(20)}#{m.url}"
+      end
+      puts
     end
 
     def update repos, mrbgems

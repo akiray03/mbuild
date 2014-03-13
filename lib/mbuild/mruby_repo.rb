@@ -12,6 +12,7 @@ module Mbuild
 
     attr_reader :dir
     attr_reader :name
+    attr_reader :url
 
     def clean
       system "rm -rf #{@dir}/build" unless opts[:update]

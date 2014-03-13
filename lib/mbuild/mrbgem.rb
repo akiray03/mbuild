@@ -26,6 +26,7 @@ module Mbuild
     attr_reader :deps
     attr_reader :dir
     attr_reader :name
+    attr_reader :url
 
     def set_dir dir
       @dir = dir
