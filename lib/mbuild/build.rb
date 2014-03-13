@@ -23,6 +23,20 @@ module Mbuild
     attr_reader :result_all
     attr_reader :result_test
 
+    def to_h
+      {
+          'mruby' => mruby.name,
+          'mruby_url' => mruby.url,
+          'mruby_hash' => mruby.hash,
+          'gem' => (gem && gem.name),
+          'gem_url' => (gem && gem.url),
+          'gem_hash' => (gem && gem.hash),
+          'gem_deps' => (gem && gem.deps),
+          'result_all' => result_all,
+          'result_test' => result_test
+      }
+    end
+
     def build
       mruby.clean
       build_all
@@ -77,6 +91,5 @@ module Mbuild
         f.puts "end"
       end
     end
-
   end
 end

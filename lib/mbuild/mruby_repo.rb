@@ -6,6 +6,7 @@ module Mbuild
       @name    = name
       @url     = url
       @branch  = branch
+      @hash    = nil
 
       @dir = File.join(workdir, @name)
       @upadted = false
@@ -15,6 +16,7 @@ module Mbuild
     attr_reader :name
     attr_reader :url
     attr_reader :branch
+    attr_reader :hash
 
     def clean
       system "rm -rf #{@dir}/build" unless opts[:update]
@@ -30,6 +32,8 @@ module Mbuild
       if @branch
         system "cd #{@dir} && git checkout #{@branch}"
       end
+
+      @hash = `cd #{@dir} && (git log -1 | head -1 | cut -d' ' -f2)`.strip
       @updated = true
     end
   end

@@ -6,6 +6,7 @@ module Mbuild
       @name = name
       @url  = url
       @deps = deps
+      @hash = nil
 
       @dir = File.join(workdir, @name)
       @updated = false
@@ -27,6 +28,7 @@ module Mbuild
     attr_reader :dir
     attr_reader :name
     attr_reader :url
+    attr_reader :hash
 
     def set_dir dir
       @dir = dir
@@ -40,6 +42,7 @@ module Mbuild
       else
         system "git clone -q --depth 1 #{@url} #{@dir}"
       end
+      @hash = `cd #{@dir} && (git log -1 | head -1 | cut -d' ' -f2)`.strip
       @updated = true
     end
   end

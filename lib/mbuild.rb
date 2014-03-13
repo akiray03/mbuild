@@ -1,5 +1,7 @@
 require 'fileutils'
 require 'optparse'
+require 'json'
+
 require 'term/ansicolor'
 require 'ruby-progressbar'
 require 'toml'
@@ -53,6 +55,9 @@ module Mbuild
       update repos, mrbgems
       results = build repos, mrbgems
       report results
+      File.open(File.join(@workdir, 'result.json'), 'w') do |f|
+        f.puts results.map(&:to_h).to_json
+      end
     rescue InvalidCommandLineOptionError
       exit 1
     end
@@ -150,8 +155,8 @@ module Mbuild
 
       puts
       puts "Build Results:".yellow
-      puts "%-7s %-20s %-8s%s" % [ "mruby", "mrbgem", "build", "test" ]
-      puts "-" * 48
+      puts "%-15s %-28s %-8s%s" % [ "mruby", "mrbgem", "build", "test" ]
+      puts "-" * 64
 
       results.sort! { |a, b|
         if a.gem.name == b.gem.name
@@ -161,8 +166,8 @@ module Mbuild
         end
       }
       results.each do |b|
-        l =  "%-7s " % b.mruby.name
-        l += "%-20s " % b.gem.name
+        l =  "%-7s%-8s " % [b.mruby.name, (b.mruby.hash && b.mruby.hash[0,7])]
+        l += "%-20s%-8s " % [b.gem.name, (b.gem.hash && b.gem.hash[0,7])]
         l += result_to_str(b.result_all) + result_to_str(b.result_test)
         puts l
       end
