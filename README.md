@@ -4,7 +4,7 @@ mruby and mrbgem build tool
 
 ## Installation
 
-    $ gem install mruby-build
+    $ gem install mbuild
 
 ## Usage
 
