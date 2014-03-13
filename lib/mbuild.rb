@@ -24,16 +24,17 @@ module Mbuild
       @workdir   = File.expand_path(ENV['MBUILD_WORKDIR'] || Dir.pwd)
       @opts      = opt_parse argv
       @parallels = (ENV['MBUILD_PARALLEL'] || 1).to_i
-      default_config_path = File.expand_path('../default.conf', __FILE__)
-      user_config_path = ENV['MBUILD_CONFIG'] || File.join(ENV['HOME'], '.mbuild.conf')
-      @config = Config.new default_config_path, user_config_path
 
       Build.pwd     = MrubyRepo.pwd     = MrbgemRepo.pwd     = @pwd
       Build.workdir = MrubyRepo.workdir = MrbgemRepo.workdir = @workdir
       Build.opts    = MrubyRepo.opts    = MrbgemRepo.opts    = @opts
 
-      repos   = load_mruby_list
-      mrbgems = load_mgem_list
+      default_config_path = File.expand_path('../default.conf', __FILE__)
+      user_config_path = ENV['MBUILD_CONFIG'] || File.join(ENV['HOME'], '.mbuild.conf')
+      @config = Config.new default_config_path, user_config_path
+      repos   = @config.repos
+      mrbgems = @config.mrbgems
+
       if @opts[:base].size > 0
         repos = repos.select{|r| @opts[:base].include? r.name}
       end
