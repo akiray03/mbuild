@@ -3,12 +3,14 @@ require 'optparse'
 require 'term/ansicolor'
 require 'ruby-progressbar'
 require 'toml'
+require 'mgem'
 
 require "mbuild/version"
 require "mbuild/base"
 require "mbuild/mruby_repo"
-require "mbuild/mrbgem"
+require "mbuild/mrbgem_repo"
 require "mbuild/build"
+require "mbuild/config"
 
 class String
   include Term::ANSIColor
@@ -23,11 +25,12 @@ module Mbuild
       @opts      = opt_parse argv
       @parallels = (ENV['MBUILD_PARALLEL'] || 1).to_i
       default_config_path = File.expand_path('../default.conf', __FILE__)
-      @config = TOML.load_file(default_config_path) if File.exist? default_config_path
+      user_config_path = ENV['MBUILD_CONFIG'] || File.join(ENV['HOME'], '.mbuild.conf')
+      @config = Config.new default_config_path, user_config_path
 
-      Build.pwd     = MrubyRepo.pwd     = Mrbgem.pwd     = @pwd
-      Build.workdir = MrubyRepo.workdir = Mrbgem.workdir = @workdir
-      Build.opts    = MrubyRepo.opts    = Mrbgem.opts    = @opts
+      Build.pwd     = MrubyRepo.pwd     = MrbgemRepo.pwd     = @pwd
+      Build.workdir = MrubyRepo.workdir = MrbgemRepo.workdir = @workdir
+      Build.opts    = MrubyRepo.opts    = MrbgemRepo.opts    = @opts
 
       repos   = load_mruby_list
       mrbgems = load_mgem_list
@@ -41,7 +44,7 @@ module Mbuild
       if @opts[:argv].size > 0
         dir  = @opts[:argv].shift
         name = File.basename dir
-        g    = Mrbgem.local name, dir, *@opts[:argv]
+        g    = MrbgemRepo.local name, dir, *@opts[:argv]
         mrbgems = [g]
       end
 
@@ -87,29 +90,29 @@ module Mbuild
 
     def load_mgem_list
       mrbgems = []
-      mrbgems << Mrbgem.new("mruby-digest", 'https://github.com/iij/mruby-digest.git')
-      mrbgems << Mrbgem.new("mruby-dir", 'https://github.com/iij/mruby-dir.git')
-      mrbgems << Mrbgem.new("mruby-env", 'https://github.com/iij/mruby-env.git',
+      mrbgems << MrbgemRepo.new("mruby-digest", 'https://github.com/iij/mruby-digest.git')
+      mrbgems << MrbgemRepo.new("mruby-dir", 'https://github.com/iij/mruby-dir.git')
+      mrbgems << MrbgemRepo.new("mruby-env", 'https://github.com/iij/mruby-env.git',
                             'iij/mruby-mtest', 'iij/mruby-regexp-pcre')
-      mrbgems << Mrbgem.new("mruby-errno", 'https://github.com/iij/mruby-errno.git')
-      mrbgems << Mrbgem.new("mruby-mdebug", 'https://github.com/iij/mruby-mdebug.git')
-      mrbgems << Mrbgem.new2("iij/mruby-mock")
-      mrbgems << Mrbgem.new("mruby-iijson", 'https://github.com/iij/mruby-iijson.git')
-      mrbgems << Mrbgem.new("mruby-io", 'https://github.com/iij/mruby-io.git')
-      mrbgems << Mrbgem.new("mruby-ipaddr", 'https://github.com/iij/mruby-ipaddr.git',
+      mrbgems << MrbgemRepo.new("mruby-errno", 'https://github.com/iij/mruby-errno.git')
+      mrbgems << MrbgemRepo.new("mruby-mdebug", 'https://github.com/iij/mruby-mdebug.git')
+      mrbgems << MrbgemRepo.new2("iij/mruby-mock")
+      mrbgems << MrbgemRepo.new("mruby-iijson", 'https://github.com/iij/mruby-iijson.git')
+      mrbgems << MrbgemRepo.new("mruby-io", 'https://github.com/iij/mruby-io.git')
+      mrbgems << MrbgemRepo.new("mruby-ipaddr", 'https://github.com/iij/mruby-ipaddr.git',
                             'iij/mruby-io', 'iij/mruby-pack', 'iij/mruby-socket',
                             'iij/mruby-env')
-      mrbgems << Mrbgem.new2("iij/mruby-pack")
-      mrbgems << Mrbgem.new2("iij/mruby-pcap")
-      mrbgems << Mrbgem.new2("iij/mruby-process")
-      mrbgems << Mrbgem.new2("iij/mruby-regexp-pcre")
-      mrbgems << Mrbgem.new2("iij/mruby-require", 'iij/mruby-io', 'iij/mruby-dir',
+      mrbgems << MrbgemRepo.new2("iij/mruby-pack")
+      mrbgems << MrbgemRepo.new2("iij/mruby-pcap")
+      mrbgems << MrbgemRepo.new2("iij/mruby-process")
+      mrbgems << MrbgemRepo.new2("iij/mruby-regexp-pcre")
+      mrbgems << MrbgemRepo.new2("iij/mruby-require", 'iij/mruby-io', 'iij/mruby-dir',
                              'iij/mruby-tempfile')
-      mrbgems << Mrbgem.new2("iij/mruby-simple-random")
-      mrbgems << Mrbgem.new2("iij/mruby-socket", 'iij/mruby-io')
-      mrbgems << Mrbgem.new("mruby-syslog", 'https://github.com/iij/mruby-syslog.git',
+      mrbgems << MrbgemRepo.new2("iij/mruby-simple-random")
+      mrbgems << MrbgemRepo.new2("iij/mruby-socket", 'iij/mruby-io')
+      mrbgems << MrbgemRepo.new("mruby-syslog", 'https://github.com/iij/mruby-syslog.git',
                             'iij/mruby-io')
-      mrbgems << Mrbgem.new2("iij/mruby-tempfile", 'iij/mruby-io', 'iij/mruby-env')
+      mrbgems << MrbgemRepo.new2("iij/mruby-tempfile", 'iij/mruby-io', 'iij/mruby-env')
       mrbgems
     end
 

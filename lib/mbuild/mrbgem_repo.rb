@@ -1,7 +1,7 @@
 require_relative 'base'
 
 module Mbuild
-  class Mrbgem < Base
+  class MrbgemRepo < Base
     def initialize name, url, *deps
       @name = name
       @url  = url
