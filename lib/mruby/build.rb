@@ -3,6 +3,7 @@ require 'optparse'
 require 'term/ansicolor'
 require 'parallel'
 require 'ruby-progressbar'
+require 'toml'
 
 require "mruby/build/version"
 require "mruby/build/base"
@@ -23,6 +24,7 @@ module Mruby
         @workdir   = File.expand_path(ENV['MRUBY_BUILD_WORKDIR'] || Dir.pwd)
         @opts      = opt_parse argv
         @parallels = (ENV['MRUBY_BUILD_PARALLEL'] || 3).to_i
+        @config = TOML.load_file('default.conf')
 
         Build.pwd     = MrubyRepo.pwd     = Mrbgem.pwd     = @pwd
         Build.workdir = MrubyRepo.workdir = Mrbgem.workdir = @workdir
