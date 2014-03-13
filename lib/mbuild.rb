@@ -1,7 +1,6 @@
 require 'fileutils'
 require 'optparse'
 require 'term/ansicolor'
-require 'parallel'
 require 'ruby-progressbar'
 require 'toml'
 
@@ -129,12 +128,12 @@ module Mbuild
     end
 
     def update repos, mrbgems
-      Parallel.map(repos, in_threads: @parallels) do |m|
+      repos.each do |m|
         puts "* updating #{m.name}/mruby".yellow
         m.update
       end
 
-      Parallel.map(mrbgems, in_threads: @parallels) do |g|
+      mrbgems.each do |g|
         puts "* updating #{g.name}".yellow
         g.update
       end
@@ -153,7 +152,7 @@ module Mbuild
       )
       builds = []
       mrbgems.each do |g|
-        builds << Parallel.map(repos, in_processes: @parallels) do |m|
+        repos.each do |m|
           b = Build.new m, g
           b.write_build_config
           b.clean
@@ -161,10 +160,10 @@ module Mbuild
           progressbar.increment
           b.build_test
           progressbar.increment
-          b
+          builds << b
         end
       end
-      builds.flatten.compact
+      builds
     end
 
     def report results
