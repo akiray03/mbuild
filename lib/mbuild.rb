@@ -81,42 +81,6 @@ module Mbuild
       build_options
     end
 
-    def load_mruby_list
-      base = []
-      base << MrubyRepo.new("mruby",  'https://github.com/mruby/mruby.git')
-      base << MrubyRepo.new("stable", 'https://github.com/mruby-Forum/mruby.git')
-      base << MrubyRepo.new("iij",    'https://github.com/iij/mruby.git')
-      base
-    end
-
-    def load_mgem_list
-      mrbgems = []
-      mrbgems << MrbgemRepo.new("mruby-digest", 'https://github.com/iij/mruby-digest.git')
-      mrbgems << MrbgemRepo.new("mruby-dir", 'https://github.com/iij/mruby-dir.git')
-      mrbgems << MrbgemRepo.new("mruby-env", 'https://github.com/iij/mruby-env.git',
-                            'iij/mruby-mtest', 'iij/mruby-regexp-pcre')
-      mrbgems << MrbgemRepo.new("mruby-errno", 'https://github.com/iij/mruby-errno.git')
-      mrbgems << MrbgemRepo.new("mruby-mdebug", 'https://github.com/iij/mruby-mdebug.git')
-      mrbgems << MrbgemRepo.new2("iij/mruby-mock")
-      mrbgems << MrbgemRepo.new("mruby-iijson", 'https://github.com/iij/mruby-iijson.git')
-      mrbgems << MrbgemRepo.new("mruby-io", 'https://github.com/iij/mruby-io.git')
-      mrbgems << MrbgemRepo.new("mruby-ipaddr", 'https://github.com/iij/mruby-ipaddr.git',
-                            'iij/mruby-io', 'iij/mruby-pack', 'iij/mruby-socket',
-                            'iij/mruby-env')
-      mrbgems << MrbgemRepo.new2("iij/mruby-pack")
-      mrbgems << MrbgemRepo.new2("iij/mruby-pcap")
-      mrbgems << MrbgemRepo.new2("iij/mruby-process")
-      mrbgems << MrbgemRepo.new2("iij/mruby-regexp-pcre")
-      mrbgems << MrbgemRepo.new2("iij/mruby-require", 'iij/mruby-io', 'iij/mruby-dir',
-                             'iij/mruby-tempfile')
-      mrbgems << MrbgemRepo.new2("iij/mruby-simple-random")
-      mrbgems << MrbgemRepo.new2("iij/mruby-socket", 'iij/mruby-io')
-      mrbgems << MrbgemRepo.new("mruby-syslog", 'https://github.com/iij/mruby-syslog.git',
-                            'iij/mruby-io')
-      mrbgems << MrbgemRepo.new2("iij/mruby-tempfile", 'iij/mruby-io', 'iij/mruby-env')
-      mrbgems
-    end
-
     def buildinfo repos, mrbgems
       puts "* Build Information (mruby)".yellow
       repos.each do |r|
