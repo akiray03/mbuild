@@ -12,6 +12,7 @@ Gem::Specification.new do |spec|
   spec.description   = ""
   spec.homepage      = "https://github.com/akiray03/mruby-build"
   spec.license       = "MIT"
+  spec.required_ruby_version = ">= 1.9.2"
 
   spec.files         = `git ls-files -z`.split("\x0")
   spec.executables   = spec.files.grep(%r{^bin/}) { |f| File.basename(f) }
