@@ -1,5 +1,0 @@
-#!/usr/bin/env ruby
-
-require 'mruby/build'
-
-Mruby::Build.run ARGV

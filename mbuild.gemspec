@@ -1,11 +1,11 @@
 # coding: utf-8
 lib = File.expand_path('../lib', __FILE__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
-require 'mruby/build/version'
+require 'mbuild/version'
 
 Gem::Specification.new do |spec|
-  spec.name          = "mruby-build"
-  spec.version       = Mruby::Build::VERSION
+  spec.name          = "mbuild"
+  spec.version       = Mbuild::VERSION
   spec.authors       = ["Akira Yumiyama"]
   spec.email         = ["yumiyama.akira@gmail.com"]
   spec.summary       = %q{mruby and mrbgem build tool}
