@@ -10,7 +10,7 @@ Gem::Specification.new do |spec|
   spec.email         = ["yumiyama.akira@gmail.com"]
   spec.summary       = %q{mruby and mrbgem build tool}
   spec.description   = ""
-  spec.homepage      = "https://github.com/akiray03/mruby-build"
+  spec.homepage      = "https://github.com/iij/mruby-build"
   spec.license       = "MIT"
   spec.required_ruby_version = ">= 1.9.2"
 
